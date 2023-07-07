@@ -1,5 +1,14 @@
+import * as yup from 'yup';
 import { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, Keyboard, TouchableWithoutFeedback, StyleSheet } from "react-native";
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    Keyboard,
+    TouchableWithoutFeedback,
+    StyleSheet
+} from "react-native";
 
 export const LoginScreen = () => {
     const [isFocusedEmail, setIsFocusedEmail] = useState(false);
@@ -13,6 +22,8 @@ export const LoginScreen = () => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
 
     const handleFocus = (value) => {
         switch (value) {
@@ -27,21 +38,67 @@ export const LoginScreen = () => {
         }
     };
 
+    const emailValidationSchema = yup.string()
+        .required('Пошта або пароль не вірний');
+    const passwordValidationSchema = yup.string()
+        .required('Пошта або пароль не вірний');
+
     const handleBlur = (value) => {
         switch (value) {
-            case "email":
+            case 'email':
                 setIsFocusedEmail(false);
-                setIsInputFilled((prevState) => ({
-                    ...prevState,
-                    email: !!email,
-                }));
+                emailValidationSchema
+                    .validate(email)
+                        .then(() => {
+                            setEmailError('');
+                        })
+                        .catch((error) => {
+                            setEmailError(error.message);
+                        });
                 break;
-            case "password":
+            case 'password':
                 setIsFocusedPassword(false);
-                setIsInputFilled((prevState) => ({
-                    ...prevState,
-                    password: !!password,
-                }));
+                passwordValidationSchema
+                    .validate(password)
+                        .then(() => {
+                            setPasswordError('');
+                        })
+                        .catch((error) => {
+                            setPasswordError(error.message);
+                        });
+                break;
+            default:
+                return;
+        }
+    };
+
+    const handleChangeText = (value, field) => {
+        switch (field) {
+            case 'email':
+                setEmail(value);
+                emailValidationSchema
+                    .validate(value)
+                        .then(() => {
+                            setEmailError('');
+                            setIsInputFilled((prevState) => ({ ...prevState, email: !!value }));
+                        })
+                        .catch((error) => {
+                            setEmailError(error.message);
+                            setIsInputFilled((prevState) => ({ ...prevState, email: false }));
+                        });
+                break;
+            case 'password':
+                setPassword(value);
+                passwordValidationSchema
+                    .validate(value)
+                        .then(() => {
+                            setPasswordError('');
+                            setIsInputFilled((prevState) => ({ ...prevState, password: !!value }));
+                        })
+                        .catch((error) => {
+                            setPasswordError(error.message);
+                            setIsInputFilled((prevState) => ({ ...prevState, password: false }));
+                        });
                 break;
             default:
                 return;
@@ -49,13 +106,35 @@ export const LoginScreen = () => {
     };
 
     const handleSubmit = () => {
-        const formData = { email, password };
+        yup.object().shape({
+            email: emailValidationSchema,
+            password: passwordValidationSchema
+        }).validate({ email, password }, { abortEarly: false })
+            .then(() => {
+                const formData = { email, password };
 
-        console.log(formData);
+                console.log(formData);
 
-        setEmail('');
-        setPassword('');
-    }
+                setEmail('');
+                setPassword('');
+                setEmailError('');
+                setPasswordError('');
+            })
+            .catch((error) => {
+                if (error.inner && error.inner.length > 0) {
+                    setEmailError('');
+                    setPasswordError('');
+
+                    error.inner.forEach((validationError) => {
+                        if (validationError.path === 'email') {
+                            setEmailError(validationError.message);
+                        } else if (validationError.path === 'password') {
+                            setPasswordError(validationError.message);
+                        }
+                    });
+                 }
+            });
+    };
 
     useEffect(() => {
         const keyboardShownListener = Keyboard.addListener("keyboardDidShow",
@@ -81,48 +160,54 @@ export const LoginScreen = () => {
     const togglePasswordVisibility = () => {
         setIsPasswordVisible((prevState) => !prevState);
     };
-
+    
     return (
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
             <View style={[styles.container, isKeyboardShown && styles.containerKeyboard]}>
-                <Text style={styles.header}>Увійти</Text>
+                 <Text style={styles.header}>Увійти</Text>
                 <View style={styles.formInput}>
-                    <TextInput
-                        name="email"
-                        value={email}
-                        onChangeText={setEmail}
-                        onFocus={() => handleFocus("email")}
-                        onBlur={() => handleBlur("email")}
-                        style={[
-                            styles.input,
-                            isFocusedEmail && styles.inputFocused,
-                            isInputFilled.email && styles.inputFilled,
-                        ]}
-                        placeholder="Адреса електронної пошти"
-                    />
-                    <View style={styles.passwordWrapper}>
+                    <View style={[emailError ? styles.inputContainerWithoutMargin : styles.inputContainer]}>
                         <TextInput
-                            name="password"
-                            value={password}
-                            onChangeText={setPassword}
-                            onFocus={() => handleFocus("password")}
-                            onBlur={() => handleBlur("password")}
+                            name="email"
+                            value={email}
+                            onChangeText={(value) => handleChangeText(value, 'email')}
+                            onFocus={() => handleFocus("email")}
+                            onBlur={() => handleBlur("email")}
                             style={[
                                 styles.input,
-                                isFocusedPassword && styles.inputFocused,
-                                isInputFilled.password && styles.inputFilled,
+                                isFocusedEmail && styles.inputFocused,
+                                isInputFilled.email && styles.inputFilled,
                             ]}
-                            secureTextEntry={!isPasswordVisible}
-                            placeholder="Пароль"
+                            placeholder="Адреса електронної пошти"
                         />
-                        <TouchableOpacity
-                            style={styles.paswordShownButton}
-                            onPress={togglePasswordVisibility}
-                        >
-                            <Text style={styles.passwordShownText}>
-                                {isPasswordVisible ? "Приховати" : "Показати"}
-                            </Text>
-                        </TouchableOpacity>
+                        {emailError !== '' && <Text style={styles.errorText}>{emailError}</Text>}
+                    </View>
+                    <View style={[ passwordError ? styles.inputContainerWithoutMargin : styles.inputContainer]}>
+                        <View style={styles.passwordWrapper}>
+                            <TextInput
+                                name="password"
+                                value={password}
+                                onChangeText={(value) => handleChangeText(value, 'password')}
+                                onFocus={() => handleFocus("password")}
+                                onBlur={() => handleBlur("password")}
+                                style={[
+                                    styles.input,
+                                    isFocusedPassword && styles.inputFocused,
+                                    isInputFilled.password && styles.inputFilled,
+                                ]}
+                                secureTextEntry={!isPasswordVisible}
+                                placeholder="Пароль"
+                            />
+                            <TouchableOpacity
+                                style={styles.paswordShownButton}
+                                onPress={togglePasswordVisibility}
+                            >
+                                <Text style={styles.passwordShownText}>
+                                    {isPasswordVisible ? "Приховати" : "Показати"}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                        {passwordError !== '' && <Text style={styles.errorText}>{passwordError}</Text>}
                     </View>
                     <TouchableOpacity onPress={handleSubmit} style={styles.loginButton}>
                         <Text style={styles.loginText}>Увійти</Text>
@@ -133,7 +218,7 @@ export const LoginScreen = () => {
                 </View>
             </View>
         </TouchableWithoutFeedback>
-    )
+    );
 };
 
 const styles = StyleSheet.create({
@@ -153,8 +238,8 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 25,
     },
     containerKeyboard: {
-        marginTop: Platform.OS === "ios" ? 125 : 250,
-        paddingTop: Platform.OS === "ios" ? 0 : 75,
+        marginTop: Platform.OS === "ios" ? 125 : 230,
+        paddingTop: Platform.OS === "ios" ? 0 : 30,
     },
     header: {
         fontFamily: "Roboto-Medium",
@@ -168,10 +253,15 @@ const styles = StyleSheet.create({
     },
     formInput: {
         width: "100%",
-        gap: 16,
+    },
+    inputContainer: {
+        position: "relative",
+        paddingBottom: 16, 
+    },
+    inputContainerWitouthMargin: {
+        paddingBottom: 0,
     },
     input: {
-        position: "relative",
         fontFamily: "Roboto-Regular",
         fontSize: 16,
         backgroundColor: "#F6F6F6",
@@ -205,6 +295,13 @@ const styles = StyleSheet.create({
     inputFilled: {
         color: "#212121",
     },
+    errorText: {
+        fontFamily: "Roboto-Regular",
+        fontSize: 12,
+        paddingLeft: 16,
+        color: "red",
+        marginTop: 2,    
+    },
     loginButton: {
         paddingTop: 16,
         paddingBottom: 16,
@@ -226,6 +323,6 @@ const styles = StyleSheet.create({
         textAlign: "center",
         fontFamily: "Roboto-Regular",
         fontSize: 16,
-        marginBottom: 111,
+        marginBottom: 45,
     }
 });
