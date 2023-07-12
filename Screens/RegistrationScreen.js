@@ -1,8 +1,7 @@
 import * as yup from 'yup';
 import * as ImagePicker from 'expo-image-picker';
 import { useState, useEffect } from "react";
-import { SvgXml } from 'react-native-svg';
-import { plus, close } from '../assets/icons/svgs';
+import { AntDesign } from '@expo/vector-icons'; 
 import {
     View,
     Text,
@@ -14,7 +13,7 @@ import {
     StyleSheet
 } from "react-native";
 
-export const RegistrationScreen = () => {
+export const RegistrationScreen = ({ navigation }) => {
     const [isSelectedImage, setSelectedImage] = useState(null);
     const [isFocusedLogin, setIsFocusedLogin] = useState(false);
     const [isFocusedEmail, setIsFocusedEmail] = useState(false);
@@ -172,9 +171,12 @@ export const RegistrationScreen = () => {
             password: passwordValidationSchema
         }).validate({ login, email, password }, { abortEarly: false })
             .then(() => {
-                const formData = { login, email, password, avatar: isSelectedImage };
+                //const formData = { login, email, password, avatar: isSelectedImage };
 
-                console.log(formData);
+                navigation.navigate('Home', {
+                    screen: 'PostsScreen',
+                    params: {login, email, avatar: isSelectedImage},
+                });
 
                 setSelectedImage(null);
                 setLogin('');
@@ -236,7 +238,7 @@ export const RegistrationScreen = () => {
                         <View>
                             <View style={styles.image} />
                             <TouchableOpacity onPress={handleImageUpload} style={styles.buttonPhoto}>
-                                <SvgXml xml={plus} width={25} height={25} style={styles.buttonText} />
+                                <AntDesign name="pluscircleo" size={25} style={styles.buttonText} />
                             </TouchableOpacity>
                         </View>
                     )}
@@ -244,7 +246,7 @@ export const RegistrationScreen = () => {
                         <View>
                             <Image source={{ uri: isSelectedImage }} style={styles.image} />
                             <TouchableOpacity onPress={handleImageDelete} style={styles.buttonPhotoSelected}>
-                            <   SvgXml xml={close} width={25} height={25} style={styles.buttonTextSelected} />
+                                <AntDesign name="closecircleo" size={25} style={styles.buttonTextSelected} />
                             </TouchableOpacity>
                         </View>
                     )}
@@ -314,7 +316,7 @@ export const RegistrationScreen = () => {
                 <TouchableOpacity onPress={handleSubmit} style={styles.registerButton}>
                     <Text style={styles.registerText}>Зареєструватися</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.alreadyRegisteredLink}>
+                <TouchableOpacity style={styles.alreadyRegisteredLink} onPress={() => navigation.navigate("Login")}>
                     <Text style={styles.alreadyRegisteredText}>Вже є акаунт? Увійти</Text>
                 </TouchableOpacity>
             </View>
@@ -357,13 +359,10 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 10,
         right: -15,
-        width: 30,
-        height: 30,
+        width: 25,
+        height: 25,
         backgroundColor: "#FFFFFF",
         borderRadius: 15,
-        borderWidth: 1,
-        borderColor: "#FF6C00",
-        borderStyle: "solid",
         zIndex: 1,
         alignItems: "center",
         justifyContent: "center",
@@ -372,22 +371,19 @@ const styles = StyleSheet.create({
         position: "absolute",
         bottom: 10,
         right: -15,
-        width: 30,
-        height: 30,
+        width: 25,
+        height: 25,
         backgroundColor: "#FFFFFF",
         borderRadius: 15,
-        borderWidth: 1,
-        borderColor: "#BDBDBD",
-        borderStyle: "solid",
         zIndex: 1,
         alignItems: "center",
         justifyContent: "center",
     },
     buttonText: {
-        fill: "#FF6C00"
+        color: "#FF6C00"
     },
     buttonTextSelected: {
-        fill: "#BDBDBD"
+        color: "#BDBDBD"
     },
     image: {
         borderRadius: 16,
@@ -466,6 +462,7 @@ const styles = StyleSheet.create({
         borderRadius: 100,
         marginTop: 43,
         marginBottom: 16,
+        width: "100%",
     },
     registerText: {
         color: "#FFFFFF",

@@ -9,8 +9,9 @@ import {
     TouchableWithoutFeedback,
     StyleSheet
 } from "react-native";
+import { PostsScreen } from './PostsScreen';
 
-export const LoginScreen = () => {
+export const LoginScreen = ({ navigation }) => {
     const [isFocusedEmail, setIsFocusedEmail] = useState(false);
     const [isFocusedPassword, setIsFocusedPassword] = useState(false);
     const [isKeyboardShown, setIsKeyboardShown] = useState(false);
@@ -113,7 +114,7 @@ export const LoginScreen = () => {
             .then(() => {
                 const formData = { email, password };
 
-                console.log(formData);
+                navigation.navigate('Home', { screen: 'PostsScreen' });
 
                 setEmail('');
                 setPassword('');
@@ -164,7 +165,7 @@ export const LoginScreen = () => {
     return (
         <TouchableWithoutFeedback onPress={dismissKeyboard}>
             <View style={[styles.container, isKeyboardShown && styles.containerKeyboard]}>
-                 <Text style={styles.header}>Увійти</Text>
+                <Text style={styles.header}>Увійти</Text>
                 <View style={styles.formInput}>
                     <View style={[emailError ? styles.inputContainerWithoutMargin : styles.inputContainer]}>
                         <TextInput
@@ -206,13 +207,13 @@ export const LoginScreen = () => {
                                     {isPasswordVisible ? "Приховати" : "Показати"}
                                 </Text>
                             </TouchableOpacity>
-                        </View>
-                        {passwordError !== '' && <Text style={styles.errorText}>{passwordError}</Text>}
+                            {passwordError !== '' && <Text style={styles.errorText}>{passwordError}</Text>}
                     </View>
+                </View>      
                     <TouchableOpacity onPress={handleSubmit} style={styles.loginButton}>
                         <Text style={styles.loginText}>Увійти</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.notRegisteredLink}>
+                    <TouchableOpacity style={styles.notRegisteredLink} onPress={() => navigation.navigate("Registration")}>
                         <Text style={styles.notRegisteredText}>Немає акаунту? Зареєструватися</Text>
                     </TouchableOpacity>
                 </View>
@@ -266,7 +267,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         backgroundColor: "#F6F6F6",
         color: "#BDBDBD",
-        width: "100%",
         height: 50,
         paddingLeft: 16,
         borderWidth: 1,
