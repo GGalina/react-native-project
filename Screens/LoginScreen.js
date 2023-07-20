@@ -1,20 +1,23 @@
 import * as yup from 'yup';
+import { connect } from 'react-redux';
 import { useState, useEffect } from "react";
+import { loginUser } from '../Redux/Users/userOperations';
 import {
     View,
     Text,
+    Alert,
     TextInput,
     TouchableOpacity,
     Keyboard,
     TouchableWithoutFeedback,
     StyleSheet
 } from "react-native";
-import { PostsScreen } from './PostsScreen';
 
-export const LoginScreen = ({ navigation }) => {
+
+const LoginScreen = ({ navigation, loginUser }) => {
     const [isFocusedEmail, setIsFocusedEmail] = useState(false);
-    const [isFocusedPassword, setIsFocusedPassword] = useState(false);
     const [isKeyboardShown, setIsKeyboardShown] = useState(false);
+    const [isFocusedPassword, setIsFocusedPassword] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isInputFilled, setIsInputFilled] = useState({
         email: false,
@@ -111,10 +114,11 @@ export const LoginScreen = ({ navigation }) => {
             email: emailValidationSchema,
             password: passwordValidationSchema
         }).validate({ email, password }, { abortEarly: false })
-            .then(() => {
-                const formData = { email, password };
+            .then(async () => {
+                const userData = { email, password };
 
-                navigation.navigate('Home', { screen: 'PostsScreen' });
+                await loginUser(userData);
+                navigation.navigate('Home');
 
                 setEmail('');
                 setPassword('');
@@ -133,7 +137,25 @@ export const LoginScreen = ({ navigation }) => {
                             setPasswordError(validationError.message);
                         }
                     });
-                 }
+                }
+                if (error.message === 'UserNotFound') {
+                    Alert.alert('Ой!', 'Здається, у Вас немає облікового запису в нас. Будь ласка, зареєструйтеся');
+                    navigation.navigate('Registration');
+
+                    setEmail('');
+                    setPassword('');
+                    setEmailError('');
+                    setPasswordError('');
+                }
+                if (error.message === 'WrongCredantials') {
+                    Alert.alert('Ой!', 'Пошта або пароль не вірні');
+                    navigation.navigate('Login');
+
+                    setEmail('');
+                    setPassword('');
+                    setEmailError('');
+                    setPasswordError('');
+                }
             });
     };
 
@@ -326,3 +348,11 @@ const styles = StyleSheet.create({
         marginBottom: 45,
     }
 });
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        loginUser: (userData) => dispatch(loginUser(userData))
+    };
+};
+
+export default connect(null, mapDispatchToProps)(LoginScreen);

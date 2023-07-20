@@ -1,24 +1,27 @@
 import * as yup from 'yup';
-import * as ImagePicker from 'expo-image-picker';
+import { connect } from 'react-redux';
 import { useState, useEffect } from "react";
 import { AntDesign } from '@expo/vector-icons'; 
+import * as ImagePicker from 'expo-image-picker';
+import { registerUser } from '../Redux/Users/userOperations';
 import {
     View,
     Text,
-    TextInput,
-    TouchableOpacity,
+    Alert,
     Image,
     Keyboard,
-    TouchableWithoutFeedback,
-    StyleSheet
+    TextInput,
+    StyleSheet,
+    TouchableOpacity,
+    TouchableWithoutFeedback
 } from "react-native";
 
-export const RegistrationScreen = ({ navigation }) => {
+const RegistrationScreen = ({ navigation, registerUser }) => {
     const [isSelectedImage, setSelectedImage] = useState(null);
     const [isFocusedLogin, setIsFocusedLogin] = useState(false);
     const [isFocusedEmail, setIsFocusedEmail] = useState(false);
-    const [isFocusedPassword, setIsFocusedPassword] = useState(false);
     const [isKeyboardShown, setIsKeyboardShown] = useState(false);
+    const [isFocusedPassword, setIsFocusedPassword] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isInputFilled, setIsInputFilled] = useState({
         login: false,
@@ -170,13 +173,11 @@ export const RegistrationScreen = ({ navigation }) => {
             email: emailValidationSchema,
             password: passwordValidationSchema
         }).validate({ login, email, password }, { abortEarly: false })
-            .then(() => {
-                //const formData = { login, email, password, avatar: isSelectedImage };
+            .then(async () => {
+                const userData = { login, email, password, avatar: isSelectedImage };
 
-                navigation.navigate('Home', {
-                    screen: 'PostsScreen',
-                    params: {login, email, avatar: isSelectedImage},
-                });
+                await registerUser(userData);
+                navigation.navigate('Home')
 
                 setSelectedImage(null);
                 setLogin('');
@@ -201,7 +202,19 @@ export const RegistrationScreen = ({ navigation }) => {
                             setPasswordError(validationError.message);
                         }
                     });
-                 }
+                }
+                if (error.message === 'UserAlreadyExists') {
+                    Alert.alert('Ой!', 'Здається, ця електронна адреса вже зареєстрована у нас. Будь ласка, увійдіть');
+                    navigation.navigate('Login');
+
+                    setSelectedImage(null);
+                    setLogin('');
+                    setEmail('');
+                    setPassword('');
+                    setLoginError('');
+                    setEmailError('');
+                    setPasswordError('');
+                }
             });
     };
 
@@ -478,3 +491,11 @@ const styles = StyleSheet.create({
         marginBottom: 45,
     }
 });
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        registerUser: (userData) => dispatch(registerUser(userData))
+    };
+};
+
+export default connect(null, mapDispatchToProps)(RegistrationScreen);
