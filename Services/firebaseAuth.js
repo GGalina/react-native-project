@@ -27,7 +27,6 @@ export const registerUserFirebase = async (userData) => {
         });
 
         await user.reload();
-        console.log(user)
         return user;
     } catch (error) {
         console.log("Error durring registration:", error)

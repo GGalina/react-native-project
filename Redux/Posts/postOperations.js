@@ -25,7 +25,6 @@ export const createPost = (post) => {
 export const fetchPosts = (userId) => {
   return async (dispatch) => {
     try {
-        console.log("User id", userId)
           const posts = await getPostsByUserIdFirestore(userId);
           dispatch(getPosts(posts));
       } catch (error) {
